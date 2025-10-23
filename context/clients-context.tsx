@@ -7,6 +7,7 @@ type ClientsCtx = {
   clients: ClientProfile[];
   getById: (id: string) => ClientProfile | undefined;
   getBySlug: (slug: string) => ClientProfile | undefined;
+  slugAvailable: (slug: string) => boolean;
   add: (c: ClientProfile) => void;
   update: (id: string, patch: Partial<ClientProfile>) => void;
   remove: (id: string) => void;
@@ -23,13 +24,14 @@ export function ClientsProvider({ children }: { children: React.ReactNode }) {
     else setClients(MOCK_CLIENTS);
   }, []);
   useEffect(() => {
-    if (clients.length) localStorage.setItem("digi_clients", JSON.stringify(clients));
+    localStorage.setItem("digi_clients", JSON.stringify(clients));
   }, [clients]);
 
   const api = useMemo<ClientsCtx>(() => ({
     clients,
     getById: (id) => clients.find(c => c.id === id),
     getBySlug: (slug) => clients.find(c => c.slug === slug),
+    slugAvailable: (slug) => !clients.some(c => c.slug === slug),
     add: (c) => setClients(prev => [c, ...prev]),
     update: (id, patch) => setClients(prev => prev.map(c => c.id === id ? { ...c, ...patch, updatedAt: new Date().toISOString() } : c)),
     remove: (id) => setClients(prev => prev.filter(c => c.id !== id))
