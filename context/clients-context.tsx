@@ -1,66 +1,87 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { ClientProfile } from "@/lib/types";
-import { MOCK_CLIENTS } from "@/lib/mock";
+import type { Site } from "@/lib/types";
+import { SCHEMA_VERSION } from "@/lib/types";
+import { MOCK_SITES } from "@/lib/mock";
+import { migrateToV2 } from "@/lib/migrate";
 
 type ClientsCtx = {
-  clients: ClientProfile[] | null;                 // null = loading/hydrating
-  getById: (id: string) => ClientProfile | undefined;
-  getBySlug: (slug: string) => ClientProfile | undefined;
+  sites: Site[] | null; // null = loading
+  list: () => Site[];
+  getBySlug: (slug: string) => Site | undefined;
+  getById: (id: string) => Site | undefined;
   slugAvailable: (slug: string) => boolean;
-  add: (c: ClientProfile) => void;
-  update: (id: string, patch: Partial<ClientProfile>) => void;
+  add: (s: Site) => void;
+  update: (id: string, patch: Partial<Site>) => void;
   remove: (id: string) => void;
-  resetToMock: () => void;                         // NEW: reseed demo data
+  resetToMock: () => void;
 };
 
-const STORAGE_KEY = "digi_clients";
+const STORAGE_KEY = "digi_sites_v2"; // new key
+
 const Ctx = createContext<ClientsCtx | null>(null);
 
-function safeLoad(): ClientProfile[] {
+function safeLoad(): Site[] {
   try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!raw) return [...MOCK_CLIENTS];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...MOCK_CLIENTS];
-    // If storage was accidentally wiped to [], reseed demo for UX
-    if (parsed.length === 0) return [...MOCK_CLIENTS];
-    return parsed;
+    // Prefer new key
+    const rawV2 = localStorage.getItem(STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2);
+      if (Array.isArray(parsed) && parsed.every((x) => x && x._v === SCHEMA_VERSION)) {
+        return parsed as Site[];
+      }
+    }
+
+    // Try legacy key and migrate (older projects used digi_clients)
+    const legacy = localStorage.getItem("digi_clients");
+    if (legacy) {
+      const arr = JSON.parse(legacy);
+      if (Array.isArray(arr)) {
+        const migrated: Site[] = arr
+          .map((x) => migrateToV2(x))
+          .filter(Boolean) as Site[];
+        if (migrated.length) return migrated;
+      }
+    }
+
+    // Fallback to mock seed
+    return [...MOCK_SITES];
   } catch {
-    return [...MOCK_CLIENTS];
+    return [...MOCK_SITES];
   }
 }
 
 export function ClientsProvider({ children }: { children: React.ReactNode }) {
-  // null during hydration; set to array once loaded
-  const [clients, setClients] = useState<ClientProfile[] | null>(null);
+  const [sites, setSites] = useState<Site[] | null>(null);
 
-  // Load once on mount
+  // initial load
   useEffect(() => {
     const data = safeLoad();
-    setClients(data);
+    setSites(data);
   }, []);
 
-  // Persist AFTER we have a non-null state
+  // persist
   useEffect(() => {
-    if (clients) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-    }
-  }, [clients]);
+    if (sites) localStorage.setItem(STORAGE_KEY, JSON.stringify(sites));
+  }, [sites]);
 
-  const api: ClientsCtx = useMemo(() => ({
-    clients,
-    getById: (id) => (clients ?? []).find(c => c.id === id),
-    getBySlug: (slug) => (clients ?? []).find(c => c.slug === slug),
-    slugAvailable: (slug) => !(clients ?? []).some(c => c.slug === slug),
-    add: (c) => setClients(prev => ([c, ...((prev ?? []) as ClientProfile[])])),
-    update: (id, patch) => setClients(prev => {
-      const arr = (prev ?? []) as ClientProfile[];
-      return arr.map(c => c.id === id ? { ...c, ...patch, updatedAt: new Date().toISOString() } : c);
+  const api: ClientsCtx = useMemo(
+    () => ({
+      sites,
+      list: () => (sites ?? []).slice().sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1)),
+      getBySlug: (slug) => (sites ?? []).find((s) => s.domain.slug === slug),
+      getById: (id) => (sites ?? []).find((s) => s.id === id),
+      slugAvailable: (slug) => !(sites ?? []).some((s) => s.domain.slug === slug),
+      add: (s) => setSites((prev) => [s, ...(prev ?? [])]),
+      update: (id, patch) =>
+        setSites((prev) =>
+          (prev ?? []).map((s) => (s.id === id ? { ...s, ...patch, updatedAt: new Date().toISOString() } : s))
+        ),
+      remove: (id) => setSites((prev) => (prev ?? []).filter((s) => s.id !== id)),
+      resetToMock: () => setSites([...MOCK_SITES]),
     }),
-    remove: (id) => setClients(prev => (prev ?? []).filter(c => c.id !== id)),
-    resetToMock: () => setClients([...MOCK_CLIENTS]),
-  }), [clients]);
+    [sites]
+  );
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
