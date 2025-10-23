@@ -1,39 +1,38 @@
 "use client";
-import { useClients } from "@/context/clients-context";
+
 import Link from "next/link";
+import {
+  ExternalLink,
+  Pencil,
+  QrCode as QrIcon,
+  RefreshCw,
+  Tag,
+  Sparkles,
+  Palette,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+import { useClients } from "@/context/clients-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { QrCode as QrIcon, Pencil, Trash2, ExternalLink, RefreshCw } from "lucide-react";
 import QrCode from "@/components/qr-code";
-import { formatDate } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
-  const { clients, remove, resetToMock } = useClients();
-  const { push } = useToast();
+  const { sites, list, remove, resetToMock } = useClients();
 
-  if (clients === null) {
-    // Loading skeletons
+  if (sites === null) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Clients</h2>
+          <h2 className="text-2xl font-semibold">Sites</h2>
           <Button disabled>Loading…</Button>
         </div>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-5">
-              <Skeleton className="h-6 w-40" />
-              <div className="mt-4 flex gap-4">
-                <Skeleton className="h-[92px] w-[92px] rounded-xl" />
-                <Skeleton className="h-4 w-[60%]" />
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
-              </div>
+            <Card key={i} className="p-6 border-white/10">
+              <div className="h-6 w-40 bg-white/10 rounded" />
+              <div className="mt-4 h-24 w-full bg-white/5 rounded-xl" />
             </Card>
           ))}
         </div>
@@ -41,53 +40,107 @@ export default function AdminDashboard() {
     );
   }
 
+  const ordered = list();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Clients</h2>
+        <h2 className="text-2xl font-semibold">Sites</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={resetToMock}>
             <RefreshCw className="size-4" /> Reseed demo
           </Button>
-          <Link href="/admin/new"><Button>Create Client</Button></Link>
+          <Link href="/onboard">
+            <Button>
+              <Sparkles className="size-4" /> New Site
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {clients.length === 0 ? (
+      {ordered.length === 0 ? (
         <Card className="p-6 border-white/10 text-white/80">
-          No clients found. Click <b>Create Client</b> or <button onClick={resetToMock} className="underline">Reseed demo</button>.
+          No sites yet. Click <b>New Site</b> to create one, or{" "}
+          <button className="underline" onClick={resetToMock}>
+            Reseed demo
+          </button>
+          .
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {clients.map(c => {
-            const url = `https://prepgo.me/${c.slug}`;
+          {ordered.map((s) => {
+            const url = `https://prepgo.me/${s.domain.slug}`;
             return (
-              <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
                 <Card className="p-5 space-y-4 border-white/10">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-lg font-semibold">{c.name}</div>
-                      <div className="text-sm text-white/70">{c.title}</div>
-                      <div className="text-xs text-white/50 mt-1">Updated {formatDate(c.updatedAt)}</div>
+                      <div className="text-lg font-semibold">
+                        {s.person.fullName}
+                      </div>
+                      <div className="text-sm text-white/70">
+                        {s.person.title}
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-white/60">
+                        <Tag className="size-3" />
+                        <span
+                          className={cn(
+                            "capitalize",
+                            s.publication.status === "published"
+                              ? "text-emerald-300"
+                              : s.publication.status === "draft"
+                              ? "text-amber-300"
+                              : "text-white/60"
+                          )}
+                        >
+                          {s.publication.status}
+                        </span>
+                        <span>•</span>
+                        <span className="capitalize">{s.theme.theme}</span>
+                      </div>
                     </div>
-                    <QrIcon className="size-5 text-cyan-300" />
+                    <Palette className="size-5 text-[var(--accent-1)]" />
                   </div>
+
                   <div className="flex items-center gap-4">
                     <QrCode value={url} size={92} />
                     <div className="text-xs text-white/70 break-all">{url}</div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/admin/clients/${c.id}`}>
-                      <Button variant="outline"><Pencil className="size-4" /> Edit</Button>
+
+                  {/* ✅ Updated actions block */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/admin/sites/${s.id}/settings`}>
+                      <Button variant="outline">
+                        <Pencil className="size-4" /> Settings
+                      </Button>
                     </Link>
-                    <a href={`/u/${c.slug}`} target="_blank" rel="noreferrer">
-                      <Button variant="ghost"><ExternalLink className="size-4" /> View</Button>
+
+                    <Link href={`/admin/sites/${s.id}/builder`}>
+                      <Button variant="outline">
+                        <QrIcon className="size-4" /> Builder
+                      </Button>
+                    </Link>
+
+                    <a
+                      href={`/u/${s.domain.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Button variant="ghost">
+                        <ExternalLink className="size-4" /> View
+                      </Button>
                     </a>
+
                     <Button
                       variant="ghost"
-                      onClick={() => { remove(c.id); push({ title: "Client removed" }); }}
-                      className="text-red-300 hover:text-red-200">
-                      <Trash2 className="size-4" /> Delete
+                      className="text-red-300 hover:text-red-200"
+                      onClick={() => remove(s.id)}
+                    >
+                      Delete
                     </Button>
                   </div>
                 </Card>

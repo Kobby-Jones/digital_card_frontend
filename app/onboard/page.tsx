@@ -41,7 +41,7 @@ function slugify(input: string) {
 
 export default function Onboard() {
   const router = useRouter();
-  const { user, linkClient } = useAuth();
+  const { user, attachPrimarySite } = useAuth();
   const { add, slugAvailable } = useClients();
   const { push } = useToast();
   const { theme, setTheme } = useThemePreset();
@@ -136,41 +136,42 @@ export default function Onboard() {
     }
     const id = crypto.randomUUID();
     add({
-      id,
-      ownerId: user!.id,
-      slug: rawSlug,
-      name: form.name.trim(),
-      title: form.title.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      location: form.location.trim(),
-      bio: form.bio.trim(),
-      avatarUrl: form.avatarUrl.trim(),
-      socials: [],
-      gallery: [],
-      services: [],
-      projects: [],
-      testimonials: [],
-      faqs: [],
-      business: {
-        company: undefined,
-        tagline: undefined,
-        addressLine: form.location.trim() || undefined,
-        city: undefined,
-        country: undefined,
-        mapUrl: undefined,
-        channels: [
+        id,
+        ownerUserId: user!.id,
+        domain: { slug: rawSlug },
+        person: {
+          fullName: form.name.trim(),
+          title: form.title.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          location: form.location.trim(),
+          shortBio: form.bio.trim(),
+          avatarUrl: form.avatarUrl.trim(),
+        },
+        business: {
+          addressLine: form.location.trim() || undefined,
+        },
+        socials: [],
+        contacts: [
           ...(form.email ? [{ type: "email" as const, value: form.email.trim() }] : []),
           ...(form.phone ? [{ type: "phone" as const, value: form.phone.trim() }] : []),
         ],
-      },
-      accent: "dual",
-      theme: form.theme as any,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+        services: [],
+        projects: [],
+        testimonials: [],
+        faqs: [],
+        mediaLibrary: [],
+        theme: { theme: form.theme as any, accentStrategy: "preset", font: "Inter", layoutDensity: "comfortable" },
+        seo: undefined,
+        publication: { status: "published", visibility: "public", publishedAt: new Date().toISOString() },
+        analytics: { last30dVisits: 0, last30dQRScans: 0, topReferrers: [] },
+        billing: { plan: "free" },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        _v: 2,
+      });
     // Optional: link this profile id to the user session (owner)
-    linkClient?.(id);
+    attachPrimarySite?.(id);
 
     push({ title: "Your site is live (demo)!" });
     router.replace(`/u/${rawSlug}`);
@@ -341,9 +342,9 @@ export default function Onboard() {
                     type="button"
                     key={t.key}
                     onClick={() => {
-                        setForm((f) => ({ ...f, theme: t.key }));
-                        setTheme(t.key as any); // ⬅ live preview
-                      }}
+                      setForm((f) => ({ ...f, theme: t.key }));
+                      setTheme(t.key as any); // live apply
+                    }}
                     className={`glass rounded-xl p-3 border transition ${
                       active
                         ? "border-[var(--accent-1)] ring-1 ring-[color:var(--ring-soft)]"

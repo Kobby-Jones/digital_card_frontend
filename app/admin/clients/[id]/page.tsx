@@ -1,69 +1,58 @@
 "use client";
+
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useClients } from "@/context/clients-context";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/toast";
+import { ChevronLeft, ExternalLink, Pencil } from "lucide-react";
 
-export default function EditClientAdmin() {
+export default function AdminClientLegacyPage() {
   const { id } = useParams<{ id: string }>();
-  const { getById, update } = useClients();
-  const item = getById(id);
   const router = useRouter();
-  const { push } = useToast();
+  const { getById, remove } = useClients();
 
-  const [form, setForm] = useState({
-    name: "", slug: "", title: "", email: "", phone: "", location: "", bio: "", avatarUrl: "", accent: "dual" as "dual"|"cyan"|"magenta"
-  });
+  const site = getById(id);
 
-  useEffect(() => {
-    if (!item) return;
-    setForm({
-      name: item.name, slug: item.slug, title: item.title, email: item.email, phone: item.phone ?? "",
-      location: item.location ?? "", bio: item.bio, avatarUrl: item.avatarUrl, accent: item.accent ?? "dual"
-    });
-  }, [item]);
-
-  if (!item) return <div className="text-white/70">Client not found.</div>;
-
-  function save() {
-    if (!item) return;
-    update(item.id, { ...form, slug: form.slug.toLowerCase() });
-    push({ title: "Saved changes" });
-    router.push("/admin");
+  if (!site) {
+    return (
+      <div className="space-y-6">
+        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-white/70">
+          <ChevronLeft className="size-4" /> Back
+        </Link>
+        <Card className="p-6 border-white/10">Site not found.</Card>
+      </div>
+    );
   }
 
+  const url = `https://prepgo.me/${site.domain.slug}`;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-4 glass rounded-2xl p-6">
-      <h2 className="text-xl font-semibold">Edit Client (Admin)</h2>
-      <div className="grid md:grid-cols-2 gap-4">
-        <div><Label>Name</Label><Input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} /></div>
-        <div><Label>Slug</Label><Input value={form.slug} onChange={e=>setForm(f=>({...f,slug:e.target.value}))} /></div>
-        <div><Label>Title</Label><Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} /></div>
-        <div><Label>Email</Label><Input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} /></div>
-        <div><Label>Phone</Label><Input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
-        <div><Label>Location</Label><Input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} /></div>
-        <div className="md:col-span-2"><Label>Avatar URL</Label><Input value={form.avatarUrl} onChange={e=>setForm(f=>({...f,avatarUrl:e.target.value}))} /></div>
-        <div className="md:col-span-2"><Label>Bio</Label><Textarea value={form.bio} onChange={e=>setForm(f=>({...f,bio:e.target.value}))} /></div>
-        <div className="md:col-span-2">
-          <Label>Accent</Label>
-          <div className="mt-2 flex gap-3 text-sm">
-            {["dual","cyan","magenta"].map(a=>(
-              <label key={a} className="flex items-center gap-2">
-                <input type="radio" name="accent" value={a} checked={form.accent===a} onChange={()=>setForm(f=>({...f,accent:a as any}))}/>
-                <span className="capitalize">{a}</span>
-              </label>
-            ))}
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-white/70">
+          <ChevronLeft className="size-4" /> Back
+        </Link>
+        <div className="flex gap-2">
+          <Link href={`/admin/sites/${site.id}/settings`}>
+            <Button variant="outline"><Pencil className="size-4" /> Settings</Button>
+          </Link>
+          <a href={`/u/${site.domain.slug}`} target="_blank" rel="noreferrer">
+            <Button variant="ghost"><ExternalLink className="size-4" /> View</Button>
+          </a>
+          <Button className="text-red-300" variant="ghost" onClick={() => { remove(site.id); router.push("/admin"); }}>
+            Delete
+          </Button>
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={save}>Save</Button>
-        <Button variant="outline" onClick={()=>history.back()}>Cancel</Button>
-      </div>
+
+      <Card className="p-6 border-white/10 space-y-2">
+        <div className="text-lg font-semibold">{site.person.fullName}</div>
+        <div className="text-sm text-white/70">{site.person.title}</div>
+        <div className="text-sm text-white/70">{site.person.email} · {site.person.phone}</div>
+        <div className="text-sm text-white/70">{site.person.location}</div>
+        <div className="text-sm text-white/70 break-all">{url}</div>
+      </Card>
     </div>
   );
 }

@@ -1,66 +1,84 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+
+import { useParams } from "next/navigation";
 import { useClients } from "@/context/clients-context";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/toast";
 
-export default function ClientSelfEdit() {
+export default function EditPublicSitePage() {
   const { slug } = useParams<{ slug: string }>();
   const { getBySlug, update } = useClients();
-  const item = getBySlug(slug);
-  const router = useRouter();
-  const { push } = useToast();
+
+  const site = getBySlug(slug);
+  if (!site) return <div className="text-white/70">Site not found.</div>;
 
   const [form, setForm] = useState({
-    name: "", title: "", email: "", phone: "", location: "", bio: "", avatarUrl: "", socials: "" // comma list
+    fullName: site.person.fullName,
+    title: site.person.title || "",
+    email: site.person.email || "",
+    phone: site.person.phone || "",
+    location: site.person.location || "",
+    shortBio: site.person.shortBio || "",
+    avatarUrl: site.person.avatarUrl || "",
+    socials: site.socials.map(s => ({ platform: s.platform, url: s.url, label: s.label })),
   });
 
-  useEffect(() => {
-    if (!item) return;
-    setForm({
-      name: item.name, title: item.title, email: item.email, phone: item.phone ?? "", location: item.location ?? "",
-      bio: item.bio, avatarUrl: item.avatarUrl, socials: item.socials.map(s => `${s.label}:${s.url}`).join(", ")
-    });
-  }, [item]);
-
-  if (!item) return <div className="text-white/70">Not found.</div>;
-
   function save() {
-    const socials = form.socials.split(",").map(x => x.trim()).filter(Boolean).map(entry => {
-      const [label, ...rest] = entry.split(":");
-      const url = rest.join(":").trim();
-      return { label, url, icon: label.toLowerCase() };
-    });
-    if (!item) return;
-    update(item.id, { ...item, ...form, socials });
-    push({ title: "Profile updated" });
-    router.push(`/u/${item.slug}`);
+    if (site) {
+      update(site.id, {
+        person: {
+          ...site.person,
+          fullName: form.fullName,
+          title: form.title,
+          email: form.email,
+          phone: form.phone,
+          location: form.location,
+          shortBio: form.shortBio,
+          avatarUrl: form.avatarUrl,
+        },
+        socials: form.socials.map(s => ({ platform: s.platform, url: s.url, label: s.label })),
+      });
+    }
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 glass rounded-2xl p-6">
-      <h2 className="text-xl font-semibold">Edit your profile</h2>
-      <div className="grid md:grid-cols-2 gap-4">
-        <div><Label>Name</Label><Input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} /></div>
-        <div><Label>Title</Label><Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} /></div>
-        <div><Label>Email</Label><Input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} /></div>
-        <div><Label>Phone</Label><Input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
-        <div><Label>Location</Label><Input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} /></div>
-        <div className="md:col-span-2"><Label>Avatar URL</Label><Input value={form.avatarUrl} onChange={e=>setForm(f=>({...f,avatarUrl:e.target.value}))} /></div>
-        <div className="md:col-span-2"><Label>Bio</Label><Textarea value={form.bio} onChange={e=>setForm(f=>({...f,bio:e.target.value}))} /></div>
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-3">
+        <Input value={form.fullName} onChange={e=>setForm(f=>({ ...f, fullName: e.target.value }))} placeholder="Full name" />
+        <Input value={form.title} onChange={e=>setForm(f=>({ ...f, title: e.target.value }))} placeholder="Title" />
+        <Input value={form.email} onChange={e=>setForm(f=>({ ...f, email: e.target.value }))} placeholder="Email" />
+        <Input value={form.phone} onChange={e=>setForm(f=>({ ...f, phone: e.target.value }))} placeholder="Phone" />
+        <Input value={form.location} onChange={e=>setForm(f=>({ ...f, location: e.target.value }))} placeholder="Location" />
+        <Input value={form.avatarUrl} onChange={e=>setForm(f=>({ ...f, avatarUrl: e.target.value }))} placeholder="Avatar URL" />
         <div className="md:col-span-2">
-          <Label>Socials (format: Label:https://url, Label:https://url)</Label>
-          <Input value={form.socials} onChange={e=>setForm(f=>({...f,socials:e.target.value}))} placeholder="LinkedIn:https://..., Twitter:https://..." />
+          <Textarea rows={4} value={form.shortBio} onChange={e=>setForm(f=>({ ...f, shortBio: e.target.value }))} placeholder="Short bio" />
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={save}>Save</Button>
-        <Button variant="outline" onClick={()=>history.back()}>Cancel</Button>
+
+      {/* Simple socials editor (example) */}
+      <div className="space-y-2">
+        {form.socials.map((s, i) => (
+          <div key={i} className="grid md:grid-cols-3 gap-2">
+            <Input value={s.platform} readOnly />
+            <Input value={s.url} onChange={e=>{
+              const v = e.target.value;
+              setForm(f => {
+                const arr = [...f.socials]; arr[i] = { ...arr[i], url: v }; return { ...f, socials: arr };
+              });
+            }} />
+            <Input placeholder="Label (optional)" value={s.label || ""} onChange={e=>{
+              const v = e.target.value;
+              setForm(f => {
+                const arr = [...f.socials]; arr[i] = { ...arr[i], label: v }; return { ...f, socials: arr };
+              });
+            }} />
+          </div>
+        ))}
       </div>
+
+      <Button onClick={save}>Save</Button>
     </div>
   );
 }
