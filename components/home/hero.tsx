@@ -16,7 +16,7 @@ export default function HomeHero() {
           transition={{ duration: 0.5 }}
           className="text-4xl md:text-6xl font-extrabold leading-tight"
         >
-          Launch your modern business website in minutes.
+          <span className="accent-text accent-glow">Launch</span> your modern business website in minutes.
         </motion.h1>
         <p className="mt-4 text-white/80">
           Pick a premium neon theme, add your details, and go live with a unique URL and QR code.
@@ -45,11 +45,11 @@ export default function HomeHero() {
               whileHover={{ scale: 1.04 }}
               className="aspect-square rounded-2xl border border-white/10 grid place-items-center bg-white/5"
             >
-              <QrCode className="size-8 text-cyan-300" />
+              <QrCode className="size-8 text-[var(--accent-1)]" />
             </motion.div>
           ))}
         </div>
-        <div className="absolute -inset-1 rounded-3xl pointer-events-none border border-cyan-300/10"></div>
+        <div className="absolute -inset-1 rounded-3xl pointer-events-none border border-[color:var(--ring-soft)]"></div>
       </motion.div>
     </section>
   );

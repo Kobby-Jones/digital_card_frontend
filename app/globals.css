@@ -8,8 +8,8 @@
   --border: rgba(255,255,255,0.08);
 
   /* dynamic accents: change per theme */
-  --accent-1: #00FFFF;
-  --accent-2: #FF00FF;
+  --accent-1: #00ffff;
+  --accent-2: #ff00ff;
 
   --ring-soft: rgba(0,255,255,0.25);
   --ring-soft-2: rgba(255,0,255,0.25);
@@ -18,7 +18,7 @@
 /* THEME PRESETS (site-wide via <html data-theme="...">) */
 html[data-theme="neon"] {
   --bg:#0a0f1f; --glass:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.08);
-  --accent-1:#00FFFF; --accent-2:#FF00FF;
+  --accent-1:#00ffff; --accent-2:#ff00ff;
   --ring-soft: rgba(0,255,255,0.25); --ring-soft-2: rgba(255,0,255,0.25);
 }
 html[data-theme="aurora"] {
@@ -63,14 +63,17 @@ body {
     radial-gradient(800px 800px at 50% 50%, rgba(255,255,255,0.04), transparent 60%);
 }
 
+/* Glass cards */
 .glass { @apply backdrop-blur; background: var(--glass); border: 1px solid var(--border); }
 
+/* Headline glow */
 .neon-text {
   text-shadow:
     0 0 12px color-mix(in oklab, var(--accent-1) 60%, transparent),
     0 0 24px color-mix(in oklab, var(--accent-2) 50%, transparent);
 }
 
+/* Buttons / fills using theme gradient */
 .neon-gradient { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
 
 a { @apply outline-none focus-visible:ring-2 rounded-sm; }
@@ -78,3 +81,25 @@ a:focus-visible { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-1) 40%,
 
 /* smooth anchor scroll */
 html { scroll-behavior: smooth; }
+
+/* === THEME GRADIENT TEXT (fixed for Safari/Chromium) === */
+.accent-text {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  /* ✅ critical for Safari & some Chromium builds */
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+
+  display: inline-block;         /* improves clipping in some engines */
+  /* Optional isolation to prevent blending issues under overlays */
+  isolation: isolate;
+}
+
+/* Optional: subtle neon glow for headline */
+.accent-glow {
+  text-shadow:
+    0 0 18px color-mix(in oklab, var(--accent-1) 28%, transparent),
+    0 0 28px color-mix(in oklab, var(--accent-2) 22%, transparent);
+}
