@@ -23,7 +23,7 @@ export default function Landing() {
             Generate unique, futuristic portfolios for your clients. Share via QR on a physical card.
           </p>
           <div className="mt-6 flex gap-3">
-            <Link href="/(auth)/register"><Button>Get Started</Button></Link>
+          <Link href="/register"><Button>Get Started</Button></Link>
             <Link href="/admin"><Button variant="outline">Admin Dashboard</Button></Link>
           </div>
           <div className="mt-6 text-xs text-white/60">Example URL: <span className="text-white/80">https://digicard.me/john-smith</span></div>

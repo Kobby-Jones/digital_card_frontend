@@ -40,7 +40,7 @@ export default function LoginPage() {
         </div>
         <Button onClick={onLogin}>Continue</Button>
         <div className="text-sm text-white/70">
-          <Link className="underline" href="/(auth)/register">Create account</Link>
+        <Link className="underline" href="/register">Create account</Link>
         </div>
       </div>
     </div>

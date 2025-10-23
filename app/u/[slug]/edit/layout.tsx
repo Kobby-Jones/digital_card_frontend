@@ -13,7 +13,7 @@ export default function EditOwnerLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const c = getBySlug(slug);
     const allowed = !!c && !!user && (user.role === "admin" || user.id === c.ownerId);
-    if (!allowed) router.replace("/(auth)/login");
+    if (!allowed) router.replace("/login");
   }, [slug, user, getBySlug, router]);
 
   return <>{children}</>;

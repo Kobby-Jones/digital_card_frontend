@@ -27,11 +27,11 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <Link href="/(auth)/login">
-              <Button variant="outline">Sign In</Button>
+           <Link href="/login">
+            <Button variant="outline">Sign In</Button>
             </Link>
-            <Link href="/(auth)/register">
-              <Button>Get Started</Button>
+            <Link href="/register">
+            <Button>Get Started</Button>
             </Link>
           </nav>
         </div>

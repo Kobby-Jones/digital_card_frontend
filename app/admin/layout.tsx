@@ -8,7 +8,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (!user || !isAdmin) router.replace("/(auth)/login");
+    if (!user || !isAdmin) router.replace("/login");
   }, [user, isAdmin, router]);
 
   if (!user || !isAdmin) return <div className="text-white/70">Redirecting…</div>;
