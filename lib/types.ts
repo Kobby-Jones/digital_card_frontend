@@ -8,8 +8,11 @@ export type PortfolioItem = {
   tags?: string[];
 };
 
+export type ThemePreset = "neon" | "aurora" | "slate" | "royal";
+
 export type ClientProfile = {
   id: string;
+  ownerId?: string;          // NEW: who owns this site (client user id)
   slug: string;
   name: string;
   title: string;
@@ -21,6 +24,15 @@ export type ClientProfile = {
   socials: SocialLink[];
   gallery: PortfolioItem[];
   accent?: "cyan" | "magenta" | "dual";
-  createdAt: string; // ISO
-  updatedAt: string; // ISO
+  theme?: ThemePreset;       // NEW: choose a theme
+  createdAt: string;         // ISO
+  updatedAt: string;         // ISO
+};
+
+export type User = {
+  id: string;
+  role: "admin" | "client";
+  email: string;
+  name?: string;
+  clientId?: string;         // if client owns a single profile
 };
