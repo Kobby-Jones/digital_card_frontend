@@ -1,38 +1,80 @@
 @import "tailwindcss";
 
 :root {
+  /* base (overridden by data-theme) */
   --bg: #0a0f1f;
   --glass: rgba(255,255,255,0.06);
   --glass-strong: rgba(255,255,255,0.12);
   --border: rgba(255,255,255,0.08);
-  --neon-cyan: #00FFFF;
-  --neon-magenta: #FF00FF;
+
+  /* dynamic accents: change per theme */
+  --accent-1: #00FFFF;
+  --accent-2: #FF00FF;
+
+  --ring-soft: rgba(0,255,255,0.25);
+  --ring-soft-2: rgba(255,0,255,0.25);
 }
 
-html, body, :root {
-  height: 100%;
+/* THEME PRESETS (site-wide via <html data-theme="...">) */
+html[data-theme="neon"] {
+  --bg:#0a0f1f; --glass:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.08);
+  --accent-1:#00FFFF; --accent-2:#FF00FF;
+  --ring-soft: rgba(0,255,255,0.25); --ring-soft-2: rgba(255,0,255,0.25);
 }
+html[data-theme="aurora"] {
+  --bg:#0a1020; --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.07);
+  --accent-1:#7dd3fc; --accent-2:#a78bfa;
+  --ring-soft: rgba(125,211,252,0.25); --ring-soft-2: rgba(167,139,250,0.25);
+}
+html[data-theme="slate"] {
+  --bg:#0b0f14; --glass:rgba(255,255,255,0.04); --border:rgba(255,255,255,0.06);
+  --accent-1:#94a3b8; --accent-2:#e2e8f0;
+  --ring-soft: rgba(148,163,184,0.25); --ring-soft-2: rgba(226,232,240,0.18);
+}
+html[data-theme="royal"] {
+  --bg:#0a0d1c; --glass:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.08);
+  --accent-1:#60a5fa; --accent-2:#f472b6;
+  --ring-soft: rgba(96,165,250,0.25); --ring-soft-2: rgba(244,114,182,0.25);
+}
+html[data-theme="sunset"] {
+  --bg:#140b0b; --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.07);
+  --accent-1:#fb7185; --accent-2:#fbbf24;
+  --ring-soft: rgba(251,113,133,0.25); --ring-soft-2: rgba(251,191,36,0.25);
+}
+html[data-theme="emerald"] {
+  --bg:#061511; --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.07);
+  --accent-1:#34d399; --accent-2:#06b6d4;
+  --ring-soft: rgba(52,211,153,0.25); --ring-soft-2: rgba(6,182,212,0.25);
+}
+html[data-theme="amber"] {
+  --bg:#141007; --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.07);
+  --accent-1:#f59e0b; --accent-2:#ef4444;
+  --ring-soft: rgba(245,158,11,0.25); --ring-soft-2: rgba(239,68,68,0.25);
+}
+
+html, body, :root { height: 100%; }
 
 body {
-  @apply bg-[var(--bg)] text-white antialiased;
+  @apply text-white antialiased;
+  background: var(--bg);
   background-image:
-    radial-gradient(1200px 600px at 10% -10%, rgba(0,255,255,0.12), transparent 60%),
-    radial-gradient(1200px 600px at 110% 110%, rgba(255,0,255,0.08), transparent 60%),
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--accent-1) 20%, transparent), transparent 60%),
+    radial-gradient(1200px 600px at 110% 110%, color-mix(in oklab, var(--accent-2) 16%, transparent), transparent 60%),
     radial-gradient(800px 800px at 50% 50%, rgba(255,255,255,0.04), transparent 60%);
 }
 
-.glass {
-  @apply bg-[var(--glass)] border border-[var(--border)] backdrop-blur;
-}
+.glass { @apply backdrop-blur; background: var(--glass); border: 1px solid var(--border); }
 
 .neon-text {
   text-shadow:
-    0 0 12px rgba(0,255,255,0.6),
-    0 0 24px rgba(255,0,255,0.5);
+    0 0 12px color-mix(in oklab, var(--accent-1) 60%, transparent),
+    0 0 24px color-mix(in oklab, var(--accent-2) 50%, transparent);
 }
 
-.neon-gradient {
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-}
+.neon-gradient { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
 
-a { @apply outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 rounded-sm; }
+a { @apply outline-none focus-visible:ring-2 rounded-sm; }
+a:focus-visible { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-1) 40%, transparent); }
+
+/* smooth anchor scroll */
+html { scroll-behavior: smooth; }

@@ -3,60 +3,99 @@ import { useClients } from "@/context/clients-context";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { QrCode as QrIcon, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { QrCode as QrIcon, Pencil, Trash2, ExternalLink, RefreshCw } from "lucide-react";
 import QrCode from "@/components/qr-code";
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboard() {
-  const { clients, remove } = useClients();
+  const { clients, remove, resetToMock } = useClients();
   const { push } = useToast();
+
+  if (clients === null) {
+    // Loading skeletons
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Clients</h2>
+          <Button disabled>Loading…</Button>
+        </div>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="p-5">
+              <Skeleton className="h-6 w-40" />
+              <div className="mt-4 flex gap-4">
+                <Skeleton className="h-[92px] w-[92px] rounded-xl" />
+                <Skeleton className="h-4 w-[60%]" />
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-24" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Clients</h2>
-        <Link href="/admin/new"><Button>Create Client</Button></Link>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={resetToMock}>
+            <RefreshCw className="size-4" /> Reseed demo
+          </Button>
+          <Link href="/admin/new"><Button>Create Client</Button></Link>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {clients.map(c => {
-          const url = `https://prepgo.me/${c.slug}`;
-          return (
-            <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className="p-5 space-y-4 border-white/10">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-lg font-semibold">{c.name}</div>
-                    <div className="text-sm text-white/70">{c.title}</div>
-                    <div className="text-xs text-white/50 mt-1">Updated {formatDate(c.updatedAt)}</div>
+      {clients.length === 0 ? (
+        <Card className="p-6 border-white/10 text-white/80">
+          No clients found. Click <b>Create Client</b> or <button onClick={resetToMock} className="underline">Reseed demo</button>.
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {clients.map(c => {
+            const url = `https://prepgo.me/${c.slug}`;
+            return (
+              <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="p-5 space-y-4 border-white/10">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-lg font-semibold">{c.name}</div>
+                      <div className="text-sm text-white/70">{c.title}</div>
+                      <div className="text-xs text-white/50 mt-1">Updated {formatDate(c.updatedAt)}</div>
+                    </div>
+                    <QrIcon className="size-5 text-cyan-300" />
                   </div>
-                  <QrIcon className="size-5 text-cyan-300" />
-                </div>
-                <div className="flex items-center gap-4">
-                  <QrCode value={url} size={92} />
-                  <div className="text-xs text-white/70 break-all">{url}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link href={`/admin/clients/${c.id}`}>
-                    <Button variant="outline"><Pencil className="size-4" /> Edit</Button>
-                  </Link>
-                  <a href={`/u/${c.slug}`} target="_blank" rel="noreferrer">
-                    <Button variant="ghost"><ExternalLink className="size-4" /> View</Button>
-                  </a>
-                  <Button
-                    variant="ghost"
-                    onClick={() => { remove(c.id); push({ title: "Client removed" }); }}
-                    className="text-red-300 hover:text-red-200">
-                    <Trash2 className="size-4" /> Delete
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+                  <div className="flex items-center gap-4">
+                    <QrCode value={url} size={92} />
+                    <div className="text-xs text-white/70 break-all">{url}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/clients/${c.id}`}>
+                      <Button variant="outline"><Pencil className="size-4" /> Edit</Button>
+                    </Link>
+                    <a href={`/u/${c.slug}`} target="_blank" rel="noreferrer">
+                      <Button variant="ghost"><ExternalLink className="size-4" /> View</Button>
+                    </a>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { remove(c.id); push({ title: "Client removed" }); }}
+                      className="text-red-300 hover:text-red-200">
+                      <Trash2 className="size-4" /> Delete
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

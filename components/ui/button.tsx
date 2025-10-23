@@ -20,7 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   return (
     <button
       ref={ref}
-      className={cn(base, styles, glow && "shadow-glow", className)}
+      className={cn(base, styles, glow && "shadow-[0_0_24px_color-mix(in_oklab,var(--accent-1)_25%,transparent),0_0_24px_color-mix(in_oklab,var(--accent-2)_20%,transparent)]", className)}
       {...props}
     />
   );
