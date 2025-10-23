@@ -9,23 +9,23 @@ import { SocialIcon } from "@/components/social-icons";
 import { neonRing } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
 
 export default function PublicPortfolio() {
   const { slug } = useParams<{ slug: string }>();
   const { getBySlug } = useClients();
+  const { user } = useAuth();
   const c = getBySlug(slug);
 
   if (!c) return <div className="text-white/70">Portfolio not found.</div>;
 
   const url = `https://prepgo.me/${c.slug}`;
+  const canEdit = !!user && (user.role === "admin" || user.id === c.ownerId);
 
   return (
     <div className="space-y-10">
-      {/* Header Card */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className={`rounded-3xl glass p-6 border ${neonRing(c.accent)}`}
-      >
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        className={`rounded-3xl glass p-6 border ${neonRing(c.accent)}`}>
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={c.avatarUrl} alt={c.name} className="size-24 rounded-2xl object-cover border border-white/20" />
@@ -48,9 +48,13 @@ export default function PublicPortfolio() {
             <div className="text-xs text-white/60 mt-2">{url}</div>
           </div>
         </div>
+        {canEdit && (
+          <div className="mt-4">
+            <Link href={`/u/${c.slug}/edit`}><Button variant="outline">Edit Profile</Button></Link>
+          </div>
+        )}
       </motion.section>
 
-      {/* About */}
       <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 glass rounded-2xl p-5 border border-white/10">
           <div className="text-sm text-white/70">Contact</div>
@@ -58,9 +62,6 @@ export default function PublicPortfolio() {
             <div>{c.email}</div>
             {c.phone && <div className="text-white/80">{c.phone}</div>}
           </div>
-          <Link href={`/u/${c.slug}/edit`} className="block mt-4">
-            <Button variant="outline">Edit Profile</Button>
-          </Link>
         </div>
         <div className="md:col-span-2 glass rounded-2xl p-5 border border-white/10">
           <div className="text-sm text-white/70 mb-2">About</div>
@@ -68,7 +69,6 @@ export default function PublicPortfolio() {
         </div>
       </motion.section>
 
-      {/* Gallery */}
       <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold">Portfolio</h3>
