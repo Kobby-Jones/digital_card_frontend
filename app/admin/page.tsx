@@ -111,12 +111,15 @@ export default function AdminDashboard() {
                     <div className="text-xs text-white/70 break-all">{url}</div>
                   </div>
 
-                  {/* ✅ Updated actions block */}
+                  {/* Updated actions block */}
                   <div className="flex flex-wrap items-center gap-2">
                     <Link href={`/admin/sites/${s.id}/settings`}>
                       <Button variant="outline">
                         <Pencil className="size-4" /> Settings
                       </Button>
+                    </Link>
+                    <Link href={`/admin/sites/${s.id}/content`}>
+                    <Button variant="outline">Content</Button>
                     </Link>
 
                     <Link href={`/admin/sites/${s.id}/builder`}>
