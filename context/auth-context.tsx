@@ -1,101 +1,171 @@
-// context/auth-context.tsx
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { User, Role } from "@/lib/types";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { Role, User, ID } from "@/lib/types";
+
+/* =========================
+   Auth Context (Frontend-only mock)
+   - Persists to localStorage
+   - Migrates legacy keys
+   - Cross-tab sync
+   - Helpers: isAdmin, attach/detach primary site
+   ========================= */
+
+type SignInInput = {
+  email: string;
+  role?: Role;      // default "client"
+  name?: string;
+  primarySiteId?: ID;
+};
 
 type AuthCtx = {
   user: User | null;
   isAdmin: boolean;
-  signIn: (u: { email: string; role: Role; name?: string; clientId?: string }) => void;
+  signIn: (input: SignInInput) => void;
   signOut: () => void;
-  linkClient: (clientId: string) => void; // optional helper to attach owned profile later
+
+  // profile tweaks (handy for onboarding)
+  setName: (name?: string) => void;
+  setEmail: (email: string) => void;
+
+  // link a created site to this user
+  attachPrimarySite: (siteId: ID) => void;
+  detachPrimarySite: () => void;
 };
 
-const STORAGE_KEY = "digi_user";
+const STORAGE_KEY = "digi_user_v2";            // new, versioned key
+const LEGACY_KEYS = ["digi_user"];             // old keys we migrate from
 
 const Ctx = createContext<AuthCtx | null>(null);
+
+/* ---------- helpers ---------- */
+
+function newId(): ID {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+}
 
 function safeParseUser(raw: string | null): User | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    // Legacy migration: ensure required fields exist
     if (!parsed || typeof parsed !== "object") return null;
 
-    const role: Role | undefined =
-      parsed.role === "admin" || parsed.role === "client" ? parsed.role : undefined;
+    // Normalize/minimal validation
+    const role: Role = parsed.role === "admin" || parsed.role === "client" ? parsed.role : "client";
+    const email: string | undefined = typeof parsed.email === "string" ? parsed.email : undefined;
+    const id: string = typeof parsed.id === "string" && parsed.id.length > 0 ? parsed.id : newId();
+    const name: string | undefined = typeof parsed.name === "string" ? parsed.name : undefined;
+    const primarySiteId: string | undefined =
+      typeof parsed.primarySiteId === "string" ? parsed.primarySiteId : undefined;
 
-    const email = typeof parsed.email === "string" ? parsed.email : undefined;
+    if (!email) return null; // we require email for a valid session in this demo
 
-    // introduce id if older sessions didn't have one
-    const id = typeof parsed.id === "string" && parsed.id.length > 0
-      ? parsed.id
-      : crypto.randomUUID();
-
-    if (!role || !email) return null;
-
-    const user: User = {
-      id,
-      role,
-      email,
-      name: typeof parsed.name === "string" ? parsed.name : undefined,
-      clientId: typeof parsed.clientId === "string" ? parsed.clientId : undefined
-    };
-
-    // If we had to inject an id (migration), persist the upgraded object
-    if (!parsed.id) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    }
-
-    return user;
+    const u: User = { id, role, email, name, primarySiteId };
+    return u;
   } catch {
     return null;
   }
 }
 
+function migrateLegacyUser(): User | null {
+  // Try each legacy key, newest first
+  for (const key of LEGACY_KEYS) {
+    try {
+      const legacy = localStorage.getItem(key);
+      const u = safeParseUser(legacy);
+      if (u) {
+        // Persist migrated user into v2 key and remove legacy
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+        localStorage.removeItem(key);
+        return u;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+/* ---------- Provider ---------- */
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const didInit = useRef(false);
 
-  // Load from storage once on mount
+  // Initial load + migration
   useEffect(() => {
-    const u = safeParseUser(typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null);
+    if (didInit.current) return;
+    didInit.current = true;
+
+    let u: User | null = null;
+    try {
+      u = safeParseUser(localStorage.getItem(STORAGE_KEY));
+      if (!u) u = migrateLegacyUser();
+    } catch {
+      // ignore
+    }
     if (u) setUser(u);
   }, []);
 
-  const api = useMemo<AuthCtx>(() => ({
-    user,
-    isAdmin: user?.role === "admin",
-
-    signIn: ({ email, role, name, clientId }) => {
-      const newUser: User = {
-        id: crypto.randomUUID(),
-        role,
-        email,
-        name,
-        clientId
-      };
-      setUser(newUser);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
-    },
-
-    signOut: () => {
-      setUser(null);
-      localStorage.removeItem(STORAGE_KEY);
-    },
-
-    linkClient: (clientId: string) => {
-      setUser(prev => {
-        if (!prev) return prev;
-        const updated = { ...prev, clientId };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return updated;
-      });
+  // Persist whenever user changes
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // ignore storage failures in demo mode
     }
-  }), [user]);
+  }, [user]);
+
+  // Cross-tab sync
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === STORAGE_KEY) {
+        setUser(safeParseUser(e.newValue));
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const api = useMemo<AuthCtx>(() => {
+    return {
+      user,
+      isAdmin: user?.role === "admin",
+
+      signIn: (input) => {
+        const u: User = {
+          id: newId(),
+          role: input.role ?? "client",
+          email: input.email.trim(),
+          name: input.name?.trim() || undefined,
+          primarySiteId: input.primarySiteId,
+        };
+        setUser(u);
+      },
+
+      signOut: () => setUser(null),
+
+      setName: (name) => setUser((prev) => (prev ? { ...prev, name } : prev)),
+      setEmail: (email) => setUser((prev) => (prev ? { ...prev, email } : prev)),
+
+      attachPrimarySite: (siteId) =>
+        setUser((prev) => (prev ? { ...prev, primarySiteId: siteId } : prev)),
+
+      detachPrimarySite: () =>
+        setUser((prev) => (prev ? { ...prev, primarySiteId: undefined } : prev)),
+    };
+  }, [user]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
+
+/* ---------- Hook ---------- */
 
 export function useAuth() {
   const ctx = useContext(Ctx);
