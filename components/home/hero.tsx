@@ -9,7 +9,7 @@ export default function HomeHero() {
   return (
     <section className="grid lg:grid-cols-2 gap-10 items-center">
       <div>
-        <Badge className="mb-4">Neon • Glass • QR • Framer Motion</Badge>
+        {/* <Badge className="mb-4">Neon • Glass • QR • Framer Motion</Badge> */}
         <motion.h1
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
