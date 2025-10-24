@@ -55,6 +55,8 @@ export default function AdminDashboard() {
               <Sparkles className="size-4" /> New Site
             </Button>
           </Link>
+          <Link href="/marketplace"><Button variant="outline">Marketplace</Button></Link>
+
         </div>
       </div>
 
