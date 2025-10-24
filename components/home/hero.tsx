@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from "lucide-react";
+
 import { QrCode, Zap } from "lucide-react";
 
 export default function HomeHero() {
@@ -10,27 +12,40 @@ export default function HomeHero() {
     <section className="grid lg:grid-cols-2 gap-10 items-center">
       <div>
         {/* <Badge className="mb-4">Neon • Glass • QR • Framer Motion</Badge> */}
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-4xl md:text-6xl font-extrabold leading-tight"
-        >
-          <span className="accent-text accent-glow">Launch</span> your modern business website in minutes.
-        </motion.h1>
-        <p className="mt-4 text-white/80">
+              {/* HERO */}
+      <section className="relative overflow-hidden rounded-3xl glass p-8 border">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+            Build a stunning business website in minutes.  
+            <span className="block mt-2 accent-text accent-glow">Launch</span> without limits.
+          </h1>
+
+          <p className="mt-4 text-white/80 max-w-2xl">
           Pick a premium neon theme, add your details, and go live with a unique URL and QR code.
           Share online or print the QR on your business card.
-        </p>
+          </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/register"><Button><Zap className="size-4" /> Create your site</Button></Link>
-          <Link href="/login"><Button variant="outline">Sign in</Button></Link>
-        </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/onboard">
+              <Button>Get Started <ArrowRight className="size-4" /></Button>
+            </Link>
+            {/* Deep-link into Marketplace with a suggested theme */}
+            <Link href="/marketplace?suggest=royal">
+              <Button variant="outline">Explore Themes</Button>
+            </Link>
+          </div>
+        </motion.div>
 
-        <div className="mt-4 text-xs text-white/60">
-          Example: <span className="text-white/80">https://prepgo.me/john-smith</span>
-        </div>
+        {/* Subtle backdrop flourish */}
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(600px 300px at 10% -10%, color-mix(in oklab, var(--accent-1) 22%, transparent), transparent 60%), radial-gradient(800px 400px at 110% 110%, color-mix(in oklab, var(--accent-2) 18%, transparent), transparent 60%)",
+          }}
+        />
+      </section>
+
       </div>
 
       <motion.div
