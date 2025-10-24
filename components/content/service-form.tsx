@@ -4,13 +4,17 @@ import type { Service } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import AssetPicker from "@/components/media/asset-picker";
+import { useClients } from "@/context/clients-context";
 
 type Props = {
   value?: Service;
   onChange: (val: Service) => void;
+  siteId?: string;
 };
 
-export default function ServiceForm({ value, onChange }: Props) {
+export default function ServiceForm({ value, onChange, siteId }: Props) {
   const [state, setState] = useState<Service>(value ?? {
     id: crypto.randomUUID(),
     name: "",
@@ -21,11 +25,14 @@ export default function ServiceForm({ value, onChange }: Props) {
     isFeatured: false,
     order: 0,
   });
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { getById } = useClients();
+  const site = siteId ? getById(siteId) : null;
 
-  function commit(patch: Partial<Service>) {
-    const next = { ...state, ...patch };
-    setState(next);
-    onChange(next);
+  function commit(patch: Partial<Service> & { image?: string }) {
+    const next = { ...state, ...patch } as Service & { image?: string };
+    setState(next as Service);
+    onChange(next as Service);
   }
 
   return (
@@ -56,7 +63,33 @@ export default function ServiceForm({ value, onChange }: Props) {
           placeholder="Responsive, SEO, CMS"
         />
       </div>
-      <div className="text-xs text-white/60">Toggle featured and reorder on the list; no need here.</div>
+
+      {/* Optional: illustrative image */}
+      <div>
+        <Label>Illustration (optional)</Label>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Image URL"
+            value={(state as any).image || ""}
+            onChange={(e)=>commit({ image: e.target.value } as any)}
+          />
+          {site && <Button variant="outline" type="button" onClick={()=>setPickerOpen(true)}>Pick from Library</Button>}
+        </div>
+        {(state as any).image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={(state as any).image} alt="" className="mt-2 h-28 w-full object-cover rounded-lg border border-white/10" />
+        )}
+      </div>
+
+      {site && (
+        <AssetPicker
+          open={pickerOpen}
+          onClose={()=>setPickerOpen(false)}
+          assets={(site.mediaLibrary ?? []).map(a => ({ id: a.id, src: a.src, alt: a.alt, tags: a.tags, createdAt: a.createdAt }))}
+          onSelect={(asset) => commit({ image: asset.src } as any)}
+        />
+      )}
+      <div className="text-xs text-white/60">Toggle featured and reorder in the list.</div>
     </div>
   );
 }

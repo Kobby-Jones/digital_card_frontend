@@ -123,6 +123,15 @@
      rating?: number;         // 1..5
      order?: number;
    }
+
+   /** Partner or brand logo */
+    export interface Partner {
+    id: ID;
+    name: string;
+    logo: string;     // image URL
+    url?: string;     // optional link to partner site
+    order?: number;
+  }
    
    /** FAQ */
    export interface FAQ {
@@ -185,6 +194,7 @@
      domain: DomainSettings;
      person: Person;
      business?: BusinessDetails;
+     partners?: Partner[];
    
      socials: SocialLink[];
      contacts: ContactChannel[];
@@ -192,6 +202,7 @@
      services: Service[];
      projects: Project[];
      testimonials: Testimonial[];
+     
      faqs: FAQ[];
      mediaLibrary: MediaItem[];    // central asset bucket
    

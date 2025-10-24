@@ -188,15 +188,19 @@ export default function ContentManagerPage() {
       >
         {tab === "services" && (
           <ServiceForm
-            value={editingValue as Service | undefined}
-            onChange={(val)=>setServices(arr=>upsert(arr, val))}
-          />
+          value={editingValue as Service | undefined}
+          onChange={(val)=>setServices(arr=>upsert(arr, val))}
+          siteId={site.id}
+        />
+        
         )}
         {tab === "projects" && (
           <ProjectForm
-            value={editingValue as Project | undefined}
-            onChange={(val)=>setProjects(arr=>upsert(arr, val))}
-          />
+          value={editingValue as Project | undefined}
+          onChange={(val)=>setProjects(arr=>upsert(arr, val))}
+          siteId={site.id}
+        />
+        
         )}
         {tab === "testimonials" && (
           <TestimonialForm
