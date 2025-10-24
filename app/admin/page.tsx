@@ -127,6 +127,9 @@ export default function AdminDashboard() {
                         <QrIcon className="size-4" /> Builder
                       </Button>
                     </Link>
+                    <Link href={`/admin/sites/${s.id}/analytics`}>
+                    <Button variant="outline">Analytics</Button>
+                    </Link>
 
                     <a
                       href={`/u/${s.domain.slug}`}
