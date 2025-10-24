@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import QrCode from "@/components/qr-code";
 import { neonRing } from "@/lib/utils";
 import type { Site } from "@/lib/types";
+import Link from "next/link";
 
 type Props = {
   site: Site;
@@ -14,7 +15,26 @@ export default function SitePreview({ site, sections }: Props) {
   const url = `https://prepgo.me/${site.domain.slug}`;
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      {/* Theme ribbon */}
+      <div className="pointer-events-none absolute right-0 -top-3 sm:-top-4">
+        <div className="pointer-events-auto glass border rounded-xl px-3 py-2 flex items-center gap-3">
+          <div className="text-xs">
+            Theme: <b className="capitalize">{site.theme.theme}</b>
+          </div>
+          <div
+            className="h-4 w-20 rounded"
+            style={{ background: "linear-gradient(135deg, var(--accent-1), var(--accent-2))" }}
+          />
+          <Link
+            href={`/marketplace?suggest=${encodeURIComponent(site.theme.theme)}`}
+            className="text-xs underline text-white/80"
+          >
+            Try Themes
+          </Link>
+        </div>
+      </div>
+
       {sections.map((s) => {
         if (!s.enabled) return null;
 
@@ -30,7 +50,9 @@ export default function SitePreview({ site, sections }: Props) {
                     className="size-24 rounded-2xl object-cover border border-white/20"
                   />
                   <div className="flex-1">
-                    <h1 className="text-2xl font-bold">{site.person.fullName}</h1>
+                    <h1 className="text-2xl font-bold">
+                      {site.person.fullName} <span className="accent-text accent-glow">•</span>
+                    </h1>
                     {site.person.title && <div className="text-white/70">{site.person.title}</div>}
                     {site.person.shortBio && <div className="text-white/80 mt-2">{site.person.shortBio}</div>}
                   </div>
