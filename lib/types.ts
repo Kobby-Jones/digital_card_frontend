@@ -78,6 +78,7 @@
    
    /** Media asset for galleries or projects */
    export interface MediaItem {
+     createdAt: any;
      id: ID;
      kind: "image" | "video";
      src: string;             // URL
