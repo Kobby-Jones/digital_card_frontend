@@ -56,6 +56,11 @@ export default function AdminDashboard() {
             </Button>
           </Link>
           <Link href="/marketplace"><Button variant="outline">Marketplace</Button></Link>
+        {ordered.map((s) => (
+          <Link key={s.id} href={`/admin/sites/${s.id}/media`}>
+            <Button variant="outline">Media</Button>
+          </Link>
+        ))}
 
         </div>
       </div>
